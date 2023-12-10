@@ -1,0 +1,21 @@
+{
+  "name": "d_1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "day1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "d_1a": "cd ./d_1a/ && ts-node ./d_1a.ts",
+    "d_1b": "cd ./d_1b/ && ts-node ./d_1b.ts",
+    "d_2a": "cd ./d_2a/ && ts-node ./d_2a.ts",
+    "d_2b": "cd ./d_2b/ && ts-node ./d_2b.ts",
+    "d_3a": "cd ./d_3a/ && ts-node ./d_3a.ts",
+    "d_3b": "cd ./d_3b/ && ts-node ./d_3b.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.10.2"
+  }
+}
