@@ -2,13 +2,17 @@
 import * as fs from "fs";
 import * as readline from "readline";
 
-// Function to process each line of the file and return the sum of first and last digits
+/**
+ * Asynchronously processes each line of a CSV file.
+ * Assumes that the CSV file contains strings of digits separated by asterisks.
+ * Returns a two-dimensional array with each line's characters as a separate array.
+ */
 async function processLineByLine() {
   // Creating a read stream for the file
   const fileStream = fs.createReadStream("data.csv");
 
-  // An interface in this context is a way to define a contract for a certain structure of an object. Here, we are creating an interface using the readline module's createInterface method.
-  // This interface will allow us to read the file line by line. It takes an object as an argument, which specifies the input stream and the delay for the carriage return line feed (CRLF).
+  // Creating a readline interface to read the file line by line.
+  // The crlfDelay option treats all instances of CR LF ('\r\n') as a single line break.
   const rl = readline.createInterface({
     input: fileStream,
     crlfDelay: Infinity,
@@ -17,103 +21,73 @@ async function processLineByLine() {
   // Initializing a two-dimensional array to store the characters of each line
   const twoDimArray: string[][] = [];
 
-  // Looping through each line of the file
+  // Looping through each line of the file asynchronously
   for await (const line of rl) {
-    // Splitting the line into individual character strings array
+    // Splitting the line into an array of individual characters
     const charactersArray = line.split("");
-    // Pushing the charactersArray to the two-dimensional array
+    // Adding the characters array to the two-dimensional array
     twoDimArray.push(charactersArray);
   }
 
-  // Logging the two-dimensional array
-  // console.log(twoDimArray);
-
+  // The two-dimensional array is returned for further processing
   return twoDimArray;
 }
 
-// Start the timer
+// Start the timer to measure execution time
 console.time("Execution Time");
 
+// Self-invoking async function to process the CSV and calculate the sum
 (async function () {
+  // Await the processing of the CSV file
   const csvProc = await processLineByLine();
-  // console.log(csvProc);
-  let sum = 0;
+  // Initialize sum to accumulate the results
+  let sum: number = 0;
 
-  // Parse the array of strings and find numbers
-  for (const line of csvProc) {
+  // Iterate over each line and character to parse and calculate the sum
+  for (const [lineIdx, line] of csvProc.entries()) {
     for (let i = 0; i < line.length; i++) {
-      // Check if the current character is a digit
-      if (/\d/.test(line[i])) {
-        let numStr = line[i];
-        let j = i + 1;
+      // Check if the current character is a digit or an asterisk
+      if (/[\d*]/.test(line[i])) {
+        let gearStr: string = line[i];
+        let iTemp: number = i - 1;
 
-        // Continue to build the number string if subsequent characters are digits
-        while (j < line.length && /\d/.test(line[j])) {
-          numStr += line[j];
-          j++;
+        // Traverse backwards to capture all preceding digits
+        while (/\d/.test(line[iTemp])) {
+          gearStr = line[iTemp] + gearStr;
+          iTemp -= 1;
         }
 
-        // console.log("a", numStr);
+        iTemp = i + 1;
 
-        // Check surrounding positions for non-digit, non-period symbols in the current line
-        // and also check the previous and next lines in the csvProc array
-        let symbolFound = false;
-
-        if (
-          (i > 0 && /\D/.test(line[i - 1]) && line[i - 1] === "*") ||
-          (j < line.length && /\D/.test(line[j]) && line[j] === "*")
-        ) {
-          symbolFound = true;
+        // Traverse forwards to capture all following digits
+        while (/\d/.test(line[iTemp])) {
+          gearStr = gearStr + line[iTemp];
+          iTemp += 1;
         }
 
-        // Check the previous line if it exists
-        const prevLine =
-          csvProc.indexOf(line) > 0 ? csvProc[csvProc.indexOf(line) - 1] : null;
-        if (prevLine) {
-          const prevLineSplice = prevLine.slice(
-            i > 0 ? i - 1 : i,
-            j === prevLine.length - 1 ? j : j + 1
-          );
-          console.log(prevLineSplice);
-
-          prevLineSplice.map((a) => {
-            if (/\D/.test(a) && a !== ".") {
-              symbolFound = true;
-            }
-          });
+        /* 
+        
+        
+        
+        ADD CODE TO CHECK PREVIOUS LINE AND FOLLOWING LINE FOR ADJACENT NUMBERS
+        
+        
+        
+        
+        */
+        // Check if the string contains two sets of digits separated by an asterisk
+        if (gearStr.split("*").length === 2) {
+          // Extract the digits and calculate the product if both are valid numbers
+          const parts = gearStr.split("*").map(Number);
+          if (parts[0] && parts[1]) {
+            sum += parts[0] * parts[1];
+          }
         }
-
-        // Check the next line if it exists
-        const nextLine =
-          csvProc.indexOf(line) < csvProc.length - 1
-            ? csvProc[csvProc.indexOf(line) + 1]
-            : null;
-        if (nextLine) {
-          const nextLineSplice = nextLine.slice(
-            i > 0 ? i - 1 : i,
-            j === nextLine.length - 1 ? j : j + 1
-          );
-          console.log(nextLineSplice);
-
-          nextLineSplice.map((a) => {
-            if (/\D/.test(a) && a !== ".") {
-              symbolFound = true;
-            }
-          });
-        }
-        console.log(numStr);
-
-        if (symbolFound) {
-          console.log(true, numStr);
-          sum += parseInt(numStr, 10);
-        }
-
-        // Skip the characters that have been identified as part of the number
-        i = j - 1;
       }
     }
   }
 
+  // Output the final sum
   console.log(`Sum of numbers with adjacent symbols: ${sum}`);
   // End the timer and log the execution time
   console.timeEnd("Execution Time");
