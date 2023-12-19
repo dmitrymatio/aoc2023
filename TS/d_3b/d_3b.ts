@@ -36,6 +36,41 @@ async function processLineByLine() {
 // Start the timer to measure execution time
 console.time("Execution Time");
 
+/**
+ * Finds the full number in a string array around a given index.
+ * It checks both left and right directions for consecutive digits to form a full number.
+ * @param arr The array of strings representing characters in a line.
+ * @param idx The index around which to search for the number.
+ * @returns An object with the full number as an integer and a found flag indicating if a number was found.
+ */
+const findFullNumber = (
+  arr: string[],
+  idx: number
+): { number: number | null; found: boolean } => {
+  let numStr = "";
+  let i = idx;
+
+  // Check to the left
+  while (i >= 0 && /\d/.test(arr[i])) {
+    numStr = arr[i] + numStr;
+    i--;
+  }
+
+  // Reset index for right check, skipping the current index as it's already included
+  i = idx + 1;
+
+  // Check to the right
+  while (i < arr.length && /\d/.test(arr[i])) {
+    numStr += arr[i];
+    i++;
+  }
+
+  return {
+    number: numStr.length > 0 ? parseInt(numStr, 10) : null,
+    found: numStr.length > 0,
+  };
+};
+
 // Self-invoking async function to process the CSV and calculate the sum
 (async function () {
   // Await the processing of the CSV file
@@ -46,49 +81,118 @@ console.time("Execution Time");
   // Iterate over each line and character to parse and calculate the sum
   for (const [lineIdx, line] of csvProc.entries()) {
     for (let i = 0; i < line.length; i++) {
-      // Check if the current character is a digit or an asterisk
-      if (/[\d*]/.test(line[i])) {
-        let gearStr: string = line[i];
-        let iTemp: number = i - 1;
+      const point = line[i];
+      if (/[*]/.test(point)) {
+        console.log(`Asterisk at vertical: ${lineIdx}, horizontal: ${i}`);
 
-        // Traverse backwards to capture all preceding digits
-        while (/\d/.test(line[iTemp])) {
-          gearStr = line[iTemp] + gearStr;
-          iTemp -= 1;
-        }
+        // Initialize an array to store found numbers
+        let foundNumbers: number[] = [];
 
-        iTemp = i + 1;
-
-        // Traverse forwards to capture all following digits
-        while (/\d/.test(line[iTemp])) {
-          gearStr = gearStr + line[iTemp];
-          iTemp += 1;
-        }
-
-        /* 
-        
-        
-        
-        ADD CODE TO CHECK PREVIOUS LINE AND FOLLOWING LINE FOR ADJACENT NUMBERS
-        
-        
-        
-        
-        */
-        // Check if the string contains two sets of digits separated by an asterisk
-        if (gearStr.split("*").length === 2) {
-          // Extract the digits and calculate the product if both are valid numbers
-          const parts = gearStr.split("*").map(Number);
-          if (parts[0] && parts[1]) {
-            sum += parts[0] * parts[1];
+        // Check above the asterisk for a number
+        if (lineIdx > 0 && /\d/.test(csvProc[lineIdx - 1][i])) {
+          const { number, found } = findFullNumber(csvProc[lineIdx - 1], i);
+          if (found && number !== null) {
+            foundNumbers.push(number);
           }
+        } else {
+          // Check diagonally to the top-left of the asterisk for a number
+          if (lineIdx > 0 && i > 0 && /\d/.test(csvProc[lineIdx - 1][i - 1])) {
+            const { number, found } = findFullNumber(
+              csvProc[lineIdx - 1],
+              i - 1
+            );
+            if (found && number !== null) {
+              foundNumbers.push(number);
+            }
+          }
+          // Check diagonally to the top-right of the asterisk for a number
+          if (
+            lineIdx > 0 &&
+            i < line.length - 1 &&
+            /\d/.test(csvProc[lineIdx - 1][i + 1])
+          ) {
+            const { number, found } = findFullNumber(
+              csvProc[lineIdx - 1],
+              i + 1
+            );
+            if (found && number !== null) {
+              foundNumbers.push(number);
+            }
+          }
+        }
+        // Check below the asterisk for a number
+        if (
+          lineIdx < csvProc.length - 1 &&
+          /\d/.test(csvProc[lineIdx + 1][i])
+        ) {
+          const { number, found } = findFullNumber(csvProc[lineIdx + 1], i);
+          if (found && number !== null) {
+            foundNumbers.push(number);
+          }
+        } else {
+          // Check diagonally to the bottom-left of the asterisk for a number
+          if (
+            lineIdx < csvProc.length - 1 &&
+            i > 0 &&
+            /\d/.test(csvProc[lineIdx + 1][i - 1])
+          ) {
+            const { number, found } = findFullNumber(
+              csvProc[lineIdx + 1],
+              i - 1
+            );
+            if (found && number !== null) {
+              foundNumbers.push(number);
+            }
+          }
+          // Check diagonally to the bottom-right of the asterisk for a number
+          if (
+            lineIdx < csvProc.length - 1 &&
+            i < line.length - 1 &&
+            /\d/.test(csvProc[lineIdx + 1][i + 1])
+          ) {
+            const { number, found } = findFullNumber(
+              csvProc[lineIdx + 1],
+              i + 1
+            );
+            if (found && number !== null) {
+              foundNumbers.push(number);
+            }
+          }
+        }
+
+        // Check to the left of the asterisk for a number
+        if (i > 0 && /\d/.test(line[i - 1])) {
+          const { number, found } = findFullNumber(line, i - 1);
+          if (found && number !== null) {
+            foundNumbers.push(number);
+          }
+        }
+        // Check to the right of the asterisk for a number
+        if (i < line.length - 1 && /\d/.test(line[i + 1])) {
+          const { number, found } = findFullNumber(line, i + 1);
+          if (found && number !== null) {
+            foundNumbers.push(number);
+          }
+        }
+
+        // If two numbers are found, multiply them and add to the sum
+        if (foundNumbers.length >= 2) {
+          foundNumbers.sort((a, b) => b - a);
+          console.log(foundNumbers);
+          console.log(foundNumbers[0], foundNumbers[1]);
+
+          sum += foundNumbers[0] * foundNumbers[1];
         }
       }
     }
   }
 
   // Output the final sum
-  console.log(`Sum of numbers with adjacent symbols: ${sum}`);
-  // End the timer and log the execution time
+  console.log(`Sum: ${sum}`);
+
+  // Stop the timer and output the execution time
   console.timeEnd("Execution Time");
 })();
+
+// This line ensures the script doesn't exit immediately and waits for the async operations to complete
+setImmediate(() => {});
