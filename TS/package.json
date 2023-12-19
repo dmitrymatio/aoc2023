@@ -10,7 +10,9 @@
     "d_2a": "cd ./d_2a/ && ts-node ./d_2a.ts",
     "d_2b": "cd ./d_2b/ && ts-node ./d_2b.ts",
     "d_3a": "cd ./d_3a/ && ts-node ./d_3a.ts",
-    "d_3b": "cd ./d_3b/ && ts-node ./d_3b.ts"
+    "d_3b": "cd ./d_3b/ && ts-node ./d_3b.ts",
+    "d_4a": "cd ./d_4a/ && ts-node ./d_4a.ts",
+    "d_4b": "cd ./d_4b/ && ts-node ./d_4b.ts"
   },
   "keywords": [],
   "author": "",
